@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐉</text></svg>">
+<title>Wilds of Azeroth — WoW x Dragonwilds</title>
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<div id="app">
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Top HUD -->
+  <div id="top-hud">
+    <div id="status-bars">
+      <div class="bar hp"><div id="hp-fill"></div><span id="hp-text">100/100</span></div>
+      <div class="bar mana"><div id="mana-fill"></div><span id="mana-text">100/100</span></div>
+      <div class="bar stam"><div id="stam-fill"></div></div>
+    </div>
+    <div id="top-center">
+      <div id="level-badge"><span id="combat-level">3</span><small>Lvl</small></div>
+      <div id="quest-tracker"><div id="quest-tracker-title">Quests</div><div id="quest-tracker-list"></div></div>
+    </div>
+    <div id="top-right">
+      <canvas id="minimap" width="120" height="120"></canvas>
+      <div id="gold-chip">🪙 <span id="gold-val">0</span></div>
+      <div id="clock-chip">☀️ <span id="clock-val">08:00</span></div>
+    </div>
+  </div>
+
+  <div id="crosshair"></div>
+  <div id="interact-prompt" class="hidden"></div>
+  <div id="gather-bar-wrap" class="hidden"><div id="gather-label">Gathering…</div><div id="gather-bar"><div id="gather-fill"></div></div></div>
+  <div id="damage-layer"></div>
+  <div id="toast-layer"></div>
+  <div id="levelup-banner" class="hidden"><div id="levelup-title">Level Up!</div><div id="levelup-sub"></div></div>
+
+  <!-- Target frame -->
+  <div id="target-frame" class="hidden">
+    <div id="target-name">Wolf</div>
+    <div class="bar hp small"><div id="target-hp-fill"></div></div>
+  </div>
+
+  <!-- Touch controls -->
+  <div id="joystick-zone"><div id="joystick-base"><div id="joystick-knob"></div></div></div>
+  <div id="action-buttons">
+    <button class="abtn" id="btn-jump" title="Jump">⤒</button>
+    <button class="abtn" id="btn-dodge" title="Dodge roll">💨</button>
+    <button class="abtn primary" id="btn-attack" title="Attack">⚔️</button>
+    <button class="abtn spell" id="btn-spell1" title="Ability 1"><span id="spell1-icon">🔥</span><em id="spell1-cd"></em></button>
+    <button class="abtn spell" id="btn-spell2" title="Ability 2"><span id="spell2-icon">🌀</span><em id="spell2-cd"></em></button>
+    <button class="abtn" id="btn-interact" title="Gather / Talk">✋</button>
+  </div>
+
+  <!-- Bottom toolbar -->
+  <div id="toolbar">
+    <button data-tab="inventory" class="toolbtn">🎒<small>Bag</small></button>
+    <button data-tab="skills" class="toolbtn">🌟<small>Skills</small></button>
+    <button data-tab="craft" class="toolbtn">⚒️<small>Craft</small></button>
+    <button data-tab="build" class="toolbtn">🏠<small>Build</small></button>
+    <button data-tab="quests" class="toolbtn">❗<small>Quests</small></button>
+    <button data-tab="character" class="toolbtn">🧙<small>Hero</small></button>
+    <button data-tab="help" class="toolbtn">❓<small>Help</small></button>
+  </div>
+
+  <!-- Side panel -->
+  <div id="side-panel" class="hidden">
+    <div id="panel-header"><span id="panel-title">Bag</span><button id="panel-close">✕</button></div>
+    <div id="panel-body"></div>
+  </div>
+
+  <!-- Build bar -->
+  <div id="build-bar" class="hidden">
+    <button class="buildpick" data-build="foundation">🟫 Foundation</button>
+    <button class="buildpick" data-build="wall">🧱 Wall</button>
+    <button class="buildpick" data-build="campfire">🔥 Campfire</button>
+    <button class="buildpick" data-build="workbench">🪓 Bench</button>
+    <button class="buildpick" data-build="furnace">♨️ Furnace</button>
+    <button class="buildpick" data-build="anvil">⚒️ Anvil</button>
+    <button class="buildpick" data-build="torch">🕯️ Torch</button>
+    <button id="build-rotate">↻ Rotate</button>
+    <button id="build-cancel">✕</button>
+  </div>
+
+  <!-- Class select -->
+  <div id="class-modal">
+    <div class="modal-card">
+      <h1>🐉 WILDS OF AZEROTH</h1>
+      <p class="subtitle">WoW adventure × Dragonwilds survival — gather, build, master professions, slay the dragon.</p>
+      <h2>Choose your hero</h2>
+      <div id="class-cards">
+        <button class="class-card" data-class="warrior"><div class="cc-icon">🛡️</div><b>Warrior</b><span>Tanky melee. Heroic Strike + Whirlwind.</span></button>
+        <button class="class-card" data-class="ranger"><div class="cc-icon">🏹</div><b>Ranger</b><span>Fast bow. Multi-Shot + Volley.</span></button>
+        <button class="class-card" data-class="mage"><div class="cc-icon">🔮</div><b>Mage</b><span>Glass cannon. Fireball + Frost Nova.</span></button>
+      </div>
+      <div class="modal-row">
+        <button id="btn-new-game">▶ Start Adventure</button>
+        <button id="btn-continue" class="hidden">↺ Continue</button>
+      </div>
+      <p class="hint">📱 Phone/Tablet: left stick to move • drag right side to look • buttons to fight/gather.<br>🖥️ PC: WASD + mouse drag + Space/J/E/Q keys.</p>
+    </div>
+  </div>
+
+  <div id="loading"><div class="spin"></div><div>Conjuring Azeroth…</div></div>
+  <div id="death-modal" class="hidden"><div class="modal-card"><h1>☠️ You died</h1><p>The Spirit Healer revives you at the village… (kept your skills & buildings)</p><button id="btn-respawn">✝ Resurrect</button></div></div>
+  <div id="victory-modal" class="hidden"><div class="modal-card"><h1>🐉 DRAGON SLAIN!</h1><p>You cleansed Dragonfall Isle. The village cheers your legend!</p><button id="btn-keep-playing">Keep exploring</button></div></div>
+</div>
+<script type="module" src="game.js"></script>
+</body>
+</html>
